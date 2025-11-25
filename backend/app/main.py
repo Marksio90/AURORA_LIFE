@@ -10,7 +10,7 @@ from app.database import init_db
 from app.core.events.stream import event_stream
 
 # Import routers
-from app.api import users, events, timeline, vault
+from app.api import users, events, timeline, vault, ai
 
 
 @asynccontextmanager
@@ -54,6 +54,7 @@ app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(timeline.router)
 app.include_router(vault.router)
+app.include_router(ai.router)  # Zestaw 2: AI/ML
 
 
 @app.get("/")
@@ -69,7 +70,13 @@ async def root():
             "events": "/api/events",
             "timeline": "/api/timeline",
             "vault": "/api/vault",
+            "ai": "/api/ai",  # Zestaw 2
             "docs": "/docs"
+        },
+        "set_2_ai": {
+            "datagenius": "/api/ai/analyze, /api/ai/predict, /api/ai/recommend",
+            "aurora_agents": "/api/ai/agents/run-all",
+            "whatif_engine": "/api/ai/whatif/simulate"
         }
     }
 
