@@ -111,12 +111,75 @@ class EnergyPredictor:
             )[:5]
             feature_importance = {name: float(imp) for name, imp in top_features}
 
+        # Calculate confidence based on prediction uncertainty
+        # For tree-based models, use standard deviation of tree predictions
+        confidence = self._calculate_prediction_confidence(features_array)
+
         return {
             'prediction': prediction,
-            'confidence': 0.85,  # TODO: Calculate actual confidence interval
+            'confidence': confidence,
             'top_features': feature_importance,
             'model_version': '1.0.0'
         }
+
+    def _calculate_prediction_confidence(self, features: np.ndarray) -> float:
+        """
+        Calculate confidence score for prediction based on model uncertainty.
+
+        Uses ensemble variance from tree predictions in XGBoost.
+
+        Args:
+            features: Feature array for prediction
+
+        Returns:
+            Confidence score between 0.0 and 1.0
+        """
+        if not hasattr(self.model, 'get_booster'):
+            # Fallback for non-XGBoost models
+            return 0.75
+
+        try:
+            # Get predictions from individual trees
+            import xgboost as xgb
+            booster = self.model.get_booster()
+
+            # Predict with all trees and calculate variance
+            # Higher variance = lower confidence
+            dmatrix = xgb.DMatrix(features)
+
+            # Get number of trees
+            n_trees = len(booster.get_dump())
+
+            if n_trees > 10:
+                # Sample predictions from subsets of trees to estimate variance
+                predictions = []
+                tree_step = max(1, n_trees // 10)
+
+                for ntree_limit in range(tree_step, n_trees + 1, tree_step):
+                    pred = booster.predict(dmatrix, ntree_limit=ntree_limit)
+                    predictions.append(pred[0] if len(pred) > 0 else 0.5)
+
+                # Calculate coefficient of variation
+                if len(predictions) > 1:
+                    std_dev = np.std(predictions)
+                    mean_pred = np.mean(predictions)
+
+                    if mean_pred > 0:
+                        cv = std_dev / mean_pred
+                    else:
+                        cv = std_dev
+
+                    # Convert to confidence (lower CV = higher confidence)
+                    # CV of 0 = confidence 0.95, CV of 0.5 = confidence 0.5
+                    confidence = max(0.5, min(0.95, 0.95 - (cv * 1.5)))
+                    return float(confidence)
+
+            # Default confidence if not enough trees
+            return 0.80
+
+        except Exception as e:
+            # Fallback confidence on error
+            return 0.75
 
     def _heuristic_prediction(self, features: Dict[str, float]) -> Dict[str, Any]:
         """Fallback heuristic prediction when model is not trained."""

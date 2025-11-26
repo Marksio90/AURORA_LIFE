@@ -44,9 +44,9 @@ python-json-logger==2.0.7
 prometheus-client==0.19.0
 sentry-sdk[fastapi]==1.39.2
 
-# LLM APIs
-openai==1.6.1
-anthropic==0.8.1
+# LLM APIs (Updated January 2025)
+openai==1.58.1
+anthropic==0.40.0
 
 # Tracing
 opentelemetry-api==1.22.0
@@ -57,6 +57,7 @@ opentelemetry-instrumentation-redis==0.43b0
 opentelemetry-instrumentation-httpx==0.43b0
 opentelemetry-exporter-otlp-proto-grpc==1.22.0
 
-# Payments & Notifications
-stripe==8.2.0
+# Payments & Notifications (Updated January 2025)
+stripe==11.2.0
+sendgrid==6.11.0
 pywebpush==1.14.0

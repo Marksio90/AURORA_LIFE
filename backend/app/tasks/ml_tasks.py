@@ -65,9 +65,46 @@ def batch_predictions(user_ids: list) -> Dict[str, Any]:
     Returns:
         Prediction results for all users
     """
-    # TODO: Implement batch prediction logic
-    return {
-        'success': True,
-        'user_count': len(user_ids),
-        'message': 'Batch predictions completed'
-    }
+    import logging
+    logger = logging.getLogger(__name__)
+
+    async def _predict():
+        from app.ai.datagenius import DataGeniusService
+
+        async with async_session() as db:
+            results = {}
+            errors = 0
+
+            for user_id in user_ids:
+                try:
+                    datagenius = DataGeniusService(db)
+
+                    # Generate predictions
+                    energy_pred = await datagenius.predict_energy(user_id, "morning")
+                    mood_pred = await datagenius.predict_mood(user_id)
+
+                    results[user_id] = {
+                        'energy': energy_pred.get("predicted_energy"),
+                        'mood': mood_pred.get("predicted_mood_score"),
+                        'success': True
+                    }
+
+                    logger.info(f"Generated predictions for user {user_id}")
+
+                except Exception as e:
+                    logger.error(f"Prediction failed for user {user_id}: {e}")
+                    results[user_id] = {
+                        'success': False,
+                        'error': str(e)
+                    }
+                    errors += 1
+
+            return {
+                'success': True,
+                'user_count': len(user_ids),
+                'successful_predictions': len(user_ids) - errors,
+                'errors': errors,
+                'results': results
+            }
+
+    return asyncio.run(_predict())
