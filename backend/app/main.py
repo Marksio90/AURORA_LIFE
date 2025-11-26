@@ -10,7 +10,7 @@ from app.database import init_db
 from app.core.events.stream import event_stream
 
 # Import routers
-from app.api import users, events, timeline, vault, ai
+from app.api import users, events, timeline, vault, ai, auth
 
 
 @asynccontextmanager
@@ -50,6 +50,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api")  # Authentication
 app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(timeline.router)
@@ -66,6 +67,7 @@ async def root():
         "status": "running",
         "description": "Aurora Life Compass - Future Self OS",
         "endpoints": {
+            "auth": "/api/auth",
             "users": "/api/users",
             "events": "/api/events",
             "timeline": "/api/timeline",
