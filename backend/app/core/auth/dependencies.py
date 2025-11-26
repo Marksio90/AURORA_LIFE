@@ -75,8 +75,11 @@ async def get_current_active_user(
     Raises:
         HTTPException: If user account is inactive
     """
-    # TODO: Add is_active field to User model
-    # For now, all users are considered active
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
     return current_user
 
 
@@ -93,9 +96,12 @@ def require_roles(allowed_roles: List[str]):
     Returns:
         Dependency function that checks user roles
     """
-    async def role_checker(current_user: User = Depends(get_current_user)):
-        # TODO: Implement role checking when User model has roles field
-        # For now, allow all authenticated users
+    async def role_checker(current_user: User = Depends(get_current_active_user)):
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required roles: {', '.join(allowed_roles)}"
+            )
         return current_user
 
     return role_checker

@@ -5,6 +5,9 @@ from typing import Dict, Set
 from fastapi import WebSocket, WebSocketDisconnect
 import json
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -58,7 +61,7 @@ class ConnectionManager:
         try:
             await websocket.send_json(message)
         except Exception as e:
-            print(f"Error sending message: {e}")
+            logger.error(f"Error sending WebSocket message: {e}", exc_info=True)
 
     async def send_to_user(self, message: dict, user_id: int):
         """Send message to all connections of a specific user."""

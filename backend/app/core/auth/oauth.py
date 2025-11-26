@@ -14,7 +14,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 
-from app.core.config import settings
+from app.config import settings
 from app.models.user import User, OAuthAccount
 from app.core.auth.jwt import create_access_token, create_refresh_token
 import logging
@@ -329,11 +329,10 @@ class OAuth2Service:
             counter += 1
 
         user = User(
-            id=uuid4(),
             email=user_info["email"],
             username=username,
             full_name=user_info.get("name"),
-            password_hash="",  # OAuth users don't have passwords
+            hashed_password="",  # OAuth users don't have passwords
             is_active=True,
             is_verified=user_info.get("email_verified", False),
             role="user"
@@ -349,7 +348,7 @@ class OAuth2Service:
 
     async def _link_oauth_account(
         self,
-        user_id: uuid4,
+        user_id: int,
         user_info: Dict[str, Any],
         access_token: str
     ):
@@ -372,7 +371,6 @@ class OAuth2Service:
         else:
             # Create new link
             oauth_account = OAuthAccount(
-                id=uuid4(),
                 user_id=user_id,
                 provider=user_info["provider"],
                 provider_user_id=user_info["provider_user_id"],
