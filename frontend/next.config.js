@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone', // For Docker optimization
   images: {
     domains: ['localhost'],
   },

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Cache
+.cache
+
+# Misc
+.DS_Store
+*.log
+coverage

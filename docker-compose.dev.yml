@@ -1,0 +1,136 @@
+# Development docker-compose configuration
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aurora_postgres_dev
+    environment:
+      POSTGRES_DB: aurora_life
+      POSTGRES_USER: aurora
+      POSTGRES_PASSWORD: aurora_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aurora"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aurora_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_backend_dev
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://aurora:aurora_dev_password@postgres:5432/aurora_life
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: aurora_life
+      POSTGRES_USER: aurora
+      POSTGRES_PASSWORD: aurora_dev_password
+
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # App
+      APP_ENV: development
+      APP_DEBUG: "1"
+      SECRET_KEY: dev-secret-key-change-in-production
+
+      # CORS
+      CORS_ORIGINS: '["http://localhost:3000","http://localhost:8000"]'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_cache:/app/__pycache__
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: deps  # Only build deps stage for dev
+    container_name: aurora_frontend_dev
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Celery Worker for background tasks
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_celery_dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://aurora:aurora_dev_password@postgres:5432/aurora_life
+      REDIS_URL: redis://redis:6379/0
+      APP_ENV: development
+      SECRET_KEY: dev-secret-key-change-in-production
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A app.celery_app worker --loglevel=info
+    restart: unless-stopped
+
+  # Celery Beat for scheduled tasks
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_celery_beat_dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://aurora:aurora_dev_password@postgres:5432/aurora_life
+      REDIS_URL: redis://redis:6379/0
+      APP_ENV: development
+      SECRET_KEY: dev-secret-key-change-in-production
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A app.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  backend_cache:
