@@ -47,3 +47,12 @@ sentry-sdk[fastapi]==1.39.2
 # LLM APIs
 openai==1.6.1
 anthropic==0.8.1
+
+# Tracing
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-instrumentation-sqlalchemy==0.43b0
+opentelemetry-instrumentation-redis==0.43b0
+opentelemetry-instrumentation-httpx==0.43b0
+opentelemetry-exporter-otlp-proto-grpc==1.22.0
