@@ -56,3 +56,7 @@ opentelemetry-instrumentation-sqlalchemy==0.43b0
 opentelemetry-instrumentation-redis==0.43b0
 opentelemetry-instrumentation-httpx==0.43b0
 opentelemetry-exporter-otlp-proto-grpc==1.22.0
+
+# Payments & Notifications
+stripe==8.2.0
+pywebpush==1.14.0
