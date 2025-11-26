@@ -137,3 +137,19 @@ Include:
 
         result = await self.create_message(messages, system=system_prompt)
         return result["content"]
+
+    async def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 1.0) -> str:
+        """
+        Simple text generation method.
+
+        Args:
+            prompt: Input prompt
+            max_tokens: Maximum tokens to generate
+            temperature: Sampling temperature
+
+        Returns:
+            Generated text
+        """
+        messages = [{"role": "user", "content": prompt}]
+        result = await self.create_message(messages, max_tokens=max_tokens, temperature=temperature)
+        return result["content"]

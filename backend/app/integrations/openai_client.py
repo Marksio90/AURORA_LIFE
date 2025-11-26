@@ -143,3 +143,19 @@ Provide 3-5 key insights with actionable recommendations."""
         )
 
         return [item.embedding for item in response.data]
+
+    async def generate(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+        """
+        Simple text generation method.
+
+        Args:
+            prompt: Input prompt
+            max_tokens: Maximum tokens to generate
+            temperature: Sampling temperature
+
+        Returns:
+            Generated text
+        """
+        messages = [{"role": "user", "content": prompt}]
+        result = await self.chat_completion(messages, temperature=temperature, max_tokens=max_tokens)
+        return result["content"] or ""
