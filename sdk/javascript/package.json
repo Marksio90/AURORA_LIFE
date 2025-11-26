@@ -1,0 +1,54 @@
+{
+  "name": "@auroralife/sdk",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript SDK for AURORA_LIFE API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.esm.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "aurora-life",
+    "life-analytics",
+    "personal-analytics",
+    "sdk",
+    "api-client"
+  ],
+  "author": "AURORA_LIFE Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Marksio90/AURORA_LIFE.git",
+    "directory": "sdk/javascript"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "ts-jest": "^29.1.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "prettier": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
