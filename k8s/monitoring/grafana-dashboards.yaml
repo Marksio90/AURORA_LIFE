@@ -1,0 +1,429 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: aurora-life
+data:
+  aurora-life-overview.json: |
+    {
+      "dashboard": {
+        "title": "AURORA_LIFE - System Overview",
+        "tags": ["aurora-life", "overview"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "API Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{service=\"aurora-life-api\"}[5m])",
+                "legendFormat": "{{method}} {{endpoint}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "reqps",
+                "label": "Requests per second"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "API Response Time (P95)",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=\"aurora-life-api\"}[5m]))",
+                "legendFormat": "{{endpoint}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "s",
+                "label": "Response time"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{service=\"aurora-life-api\",status=~\"5..\"}[5m])",
+                "legendFormat": "5xx errors"
+              },
+              {
+                "expr": "rate(http_requests_total{service=\"aurora-life-api\",status=~\"4..\"}[5m])",
+                "legendFormat": "4xx errors"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "reqps",
+                "label": "Errors per second"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Active API Pods",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "count(up{job=\"aurora-life-api\"} == 1)"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"value": null, "color": "red"},
+                    {"value": 3, "color": "green"}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Database Connection Pool",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "database_pool_size{service=\"aurora-life-api\"}",
+                "legendFormat": "Pool size"
+              },
+              {
+                "expr": "database_pool_checkedout{service=\"aurora-life-api\"}",
+                "legendFormat": "Checked out"
+              },
+              {
+                "expr": "database_pool_overflow{service=\"aurora-life-api\"}",
+                "legendFormat": "Overflow"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Redis Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes{service=\"redis\"} / 1024 / 1024",
+                "legendFormat": "Used MB"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "decmbytes",
+                "label": "Memory"
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Celery Task Queue Length",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "celery_queue_length{queue=~\".*\"}",
+                "legendFormat": "{{queue}}"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "ML Prediction Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket{model_type=\"energy\"}[5m]))",
+                "legendFormat": "Energy P95"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket{model_type=\"mood\"}[5m]))",
+                "legendFormat": "Mood P95"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "s",
+                "label": "Prediction time"
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "title": "WebSocket Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "active_websocket_connections{service=\"aurora-life-api\"}",
+                "legendFormat": "Active connections"
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "title": "CPU Usage by Pod",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{namespace=\"aurora-life\"}[5m]) * 100",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "label": "CPU %"
+              }
+            ]
+          },
+          {
+            "id": 11,
+            "title": "Memory Usage by Pod",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{namespace=\"aurora-life\"} / 1024 / 1024",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "decmbytes",
+                "label": "Memory MB"
+              }
+            ]
+          },
+          {
+            "id": 12,
+            "title": "Events Created (last 24h)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "increase(events_created_total{service=\"aurora-life-api\"}[24h])"
+              }
+            ]
+          }
+        ],
+        "refresh": "30s",
+        "time": {
+          "from": "now-6h",
+          "to": "now"
+        }
+      }
+    }
+
+  aurora-life-ml.json: |
+    {
+      "dashboard": {
+        "title": "AURORA_LIFE - Machine Learning",
+        "tags": ["aurora-life", "ml", "predictions"],
+        "panels": [
+          {
+            "id": 1,
+            "title": "Predictions Generated",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(ml_predictions_total{model_type=\"energy\"}[5m])",
+                "legendFormat": "Energy predictions/s"
+              },
+              {
+                "expr": "rate(ml_predictions_total{model_type=\"mood\"}[5m])",
+                "legendFormat": "Mood predictions/s"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Model Training Duration",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "ml_training_duration_seconds{model_type=~\".*\"}",
+                "legendFormat": "{{model_type}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "s",
+                "label": "Training time"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Model Accuracy",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "ml_model_accuracy{model_type=~\".*\"}",
+                "legendFormat": "{{model_type}}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percentunit",
+                "label": "Accuracy"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Prediction Cache Hit Rate",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "rate(ml_prediction_cache_hits_total[5m]) / rate(ml_prediction_requests_total[5m])"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 0.5, "color": "yellow"},
+                    {"value": 0.8, "color": "green"}
+                  ]
+                },
+                "unit": "percentunit"
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Feature Engineering Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(ml_feature_engineering_duration_seconds_bucket[5m]))",
+                "legendFormat": "P95"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(ml_feature_engineering_duration_seconds_bucket[5m]))",
+                "legendFormat": "P50"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+  aurora-life-database.json: |
+    {
+      "dashboard": {
+        "title": "AURORA_LIFE - Database Performance",
+        "tags": ["aurora-life", "database", "postgresql"],
+        "panels": [
+          {
+            "id": 1,
+            "title": "Query Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(pg_stat_database_xact_commit{datname=\"aurora_life\"}[5m])",
+                "legendFormat": "Commits/s"
+              },
+              {
+                "expr": "rate(pg_stat_database_xact_rollback{datname=\"aurora_life\"}[5m])",
+                "legendFormat": "Rollbacks/s"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Active Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends{datname=\"aurora_life\"}",
+                "legendFormat": "Active connections"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Database Size",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pg_database_size_bytes{datname=\"aurora_life\"} / 1024 / 1024 / 1024",
+                "legendFormat": "Size GB"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "decgbytes",
+                "label": "Size"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Cache Hit Ratio",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "pg_stat_database_blks_hit{datname=\"aurora_life\"} / (pg_stat_database_blks_hit{datname=\"aurora_life\"} + pg_stat_database_blks_read{datname=\"aurora_life\"})"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 0.9, "color": "yellow"},
+                    {"value": 0.99, "color": "green"}
+                  ]
+                },
+                "unit": "percentunit"
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Table Sizes",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "pg_stat_user_tables_n_live_tup{datname=\"aurora_life\"}",
+                "format": "table"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Slow Queries",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(pg_stat_statements_calls{query=~\".*\",queryid=~\".*\"}[5m])",
+                "legendFormat": "{{query}}"
+              }
+            ]
+          }
+        ]
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: aurora-life
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
