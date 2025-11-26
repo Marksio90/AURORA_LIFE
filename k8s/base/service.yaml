@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-life-api
+  labels:
+    app: aurora-life
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: aurora-life
+    component: api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: aurora-life
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: aurora-life
+    component: database
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: aurora-life
+    component: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: aurora-life
+    component: redis

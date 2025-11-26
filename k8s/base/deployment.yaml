@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-life-api
+  labels:
+    app: aurora-life
+    component: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aurora-life
+      component: api
+  template:
+    metadata:
+      labels:
+        app: aurora-life
+        component: api
+    spec:
+      containers:
+      - name: api
+        image: aurora-life-api:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: redis-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: secret-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-life-celery-worker
+  labels:
+    app: aurora-life
+    component: celery-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aurora-life
+      component: celery-worker
+  template:
+    metadata:
+      labels:
+        app: aurora-life
+        component: celery-worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: aurora-life-api:latest
+        command: ["celery", "-A", "app.core.celery_app", "worker", "-l", "info"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aurora-life-celery-beat
+  labels:
+    app: aurora-life
+    component: celery-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aurora-life
+      component: celery-beat
+  template:
+    metadata:
+      labels:
+        app: aurora-life
+        component: celery-beat
+    spec:
+      containers:
+      - name: celery-beat
+        image: aurora-life-api:latest
+        command: ["celery", "-A", "app.core.celery_app", "beat", "-l", "info"]
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: aurora-secrets
+              key: redis-url
