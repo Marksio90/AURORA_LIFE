@@ -3,10 +3,11 @@ Claude API integration for advanced AI reasoning
 """
 from typing import Dict, Any, List, Optional
 from anthropic import AsyncAnthropic
-from app.core.config import settings
+from app.config import settings
+from app.integrations.base_llm_client import BaseLLMClient
 
 
-class ClaudeClient:
+class ClaudeClient(BaseLLMClient):
     """
     Claude API client for AURORA_LIFE.
 
@@ -17,9 +18,11 @@ class ClaudeClient:
     """
 
     def __init__(self, api_key: Optional[str] = None):
-        self.client = AsyncAnthropic(
+        super().__init__(
+            provider_name="Claude",
             api_key=api_key or getattr(settings, 'ANTHROPIC_API_KEY', None)
         )
+        self.client = AsyncAnthropic(api_key=self.api_key)
         self.model = "claude-3-opus-20240229"
 
     async def create_message(
@@ -49,6 +52,10 @@ class ClaudeClient:
             messages=messages
         )
 
+        # Log usage
+        total_tokens = response.usage.input_tokens + response.usage.output_tokens
+        self._log_request(total_tokens)
+
         return {
             "content": response.content[0].text if response.content else "",
             "usage": {
@@ -56,6 +63,33 @@ class ClaudeClient:
                 "output_tokens": response.usage.output_tokens
             }
         }
+
+    async def chat_completion(
+        self,
+        messages: List[Dict[str, str]],
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Generate chat completion from message history.
+        Wrapper around create_message for base class compatibility.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            **kwargs: Additional parameters (system, max_tokens, temperature)
+
+        Returns:
+            Completion response dict
+        """
+        system = kwargs.get("system")
+        max_tokens = kwargs.get("max_tokens", 1024)
+        temperature = kwargs.get("temperature", 1.0)
+
+        return await self.create_message(
+            messages=messages,
+            system=system,
+            max_tokens=max_tokens,
+            temperature=temperature
+        )
 
     async def analyze_life_decision(
         self,
@@ -138,18 +172,30 @@ Include:
         result = await self.create_message(messages, system=system_prompt)
         return result["content"]
 
-    async def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 1.0) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1000
+    ) -> str:
         """
         Simple text generation method.
 
         Args:
             prompt: Input prompt
-            max_tokens: Maximum tokens to generate
+            system_prompt: Optional system instructions
             temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
 
         Returns:
             Generated text
         """
         messages = [{"role": "user", "content": prompt}]
-        result = await self.create_message(messages, max_tokens=max_tokens, temperature=temperature)
+        result = await self.create_message(
+            messages,
+            system=system_prompt,
+            max_tokens=max_tokens,
+            temperature=temperature
+        )
         return result["content"]
