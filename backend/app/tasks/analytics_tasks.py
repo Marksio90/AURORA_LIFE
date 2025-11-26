@@ -26,34 +26,34 @@ def generate_daily_insights() -> Dict[str, Any]:
     """
     async def _generate():
         async with async_session() as db:
-            # Get all active users
+            # Get all active user IDs (optimized: only select id column)
             result = await db.execute(
-                select(User).where(User.is_active == True)
+                select(User.id).where(User.is_active == True)
             )
-            users = result.scalars().all()
+            user_ids = result.scalars().all()
 
             insights_generated = 0
             errors = 0
 
-            for user in users:
+            for user_id in user_ids:
                 try:
                     # Generate insights using DataGenius
                     datagenius = DataGeniusService(db)
-                    analysis = await datagenius.analyze_user_patterns(user.id, days=7)
+                    analysis = await datagenius.analyze_user_patterns(user_id, days=7)
 
                     if analysis.get("message") != "No data available for analysis":
                         insights_generated += 1
-                        logger.info(f"Generated daily insights for user {user.id}")
+                        logger.info(f"Generated daily insights for user {user_id}")
                     else:
-                        logger.debug(f"Insufficient data for user {user.id}")
+                        logger.debug(f"Insufficient data for user {user_id}")
 
                 except Exception as e:
-                    logger.error(f"Failed to generate insights for user {user.id}: {e}")
+                    logger.error(f"Failed to generate insights for user {user_id}: {e}")
                     errors += 1
 
             return {
                 'success': True,
-                'users_processed': len(users),
+                'users_processed': len(user_ids),
                 'insights_generated': insights_generated,
                 'errors': errors,
                 'timestamp': datetime.utcnow().isoformat()
