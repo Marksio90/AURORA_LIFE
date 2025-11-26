@@ -2,10 +2,11 @@
 WebSocket endpoints for real-time updates
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+import logging
 from app.core.websocket import manager
 from app.core.auth.jwt import verify_token
 
-
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -73,10 +74,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, token: str = No
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
-        print(f"User {user_id} disconnected")
+        logger.info(f"User {user_id} disconnected from WebSocket")
 
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error for user {user_id}: {e}", exc_info=True)
         manager.disconnect(websocket, user_id)
         await websocket.close(code=1011, reason="Internal error")
 

@@ -4,9 +4,12 @@ Email service for user communication
 from typing import Dict, Any
 from datetime import datetime, timedelta
 import secrets
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
@@ -35,10 +38,10 @@ class EmailService:
         Returns:
             True if sent successfully
         """
-        verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
-
-        # TODO: Send actual email
-        print(f"Verification email to {user_email}: {verification_link}")
+        # TODO: Implement actual email sending via SendGrid/AWS SES
+        # For now, log the verification link
+        logger.info(f"Email verification requested for {user_email}")
+        logger.debug(f"Verification link (not sent - email provider not configured): {settings.FRONTEND_URL}/verify-email?token={token}")
 
         return True
 
@@ -53,17 +56,17 @@ class EmailService:
         Returns:
             True if sent successfully
         """
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
-
-        # TODO: Send actual email
-        print(f"Password reset email to {user_email}: {reset_link}")
+        # TODO: Implement actual email sending via SendGrid/AWS SES
+        # For now, log the reset link
+        logger.info(f"Password reset requested for {user_email}")
+        logger.debug(f"Reset link (not sent - email provider not configured): {settings.FRONTEND_URL}/reset-password?token={token}")
 
         return True
 
     async def send_welcome_email(self, user_email: str, user_name: str) -> bool:
         """Send welcome email to new user."""
-        # TODO: Send actual email
-        print(f"Welcome email to {user_email} ({user_name})")
+        # TODO: Implement actual email sending via SendGrid/AWS SES
+        logger.info(f"Welcome email triggered for {user_email} ({user_name})")
         return True
 
     @staticmethod

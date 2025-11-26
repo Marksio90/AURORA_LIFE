@@ -4,32 +4,36 @@ Aurora Life Compass - Main Application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 
 from app.config import settings
 from app.database import init_db
 from app.core.events.stream import event_stream
+from app.middleware.rate_limit import RateLimitMiddleware
 
 # Import routers
 from app.api import users, events, timeline, vault, ai, auth
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    print("🚀 Starting Aurora Life Compass...")
+    logger.info("🚀 Starting Aurora Life Compass...")
     await init_db()
-    print("✅ Database initialized")
+    logger.info("✅ Database initialized")
 
     # Connect to Redis
     await event_stream.connect()
-    print("✅ Redis Stream connected")
+    logger.info("✅ Redis Stream connected")
 
     yield
 
     # Shutdown
     await event_stream.disconnect()
-    print("👋 Aurora Life Compass shutdown complete")
+    logger.info("👋 Aurora Life Compass shutdown complete")
 
 
 # Create FastAPI app
@@ -47,6 +51,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Rate Limiting for expensive ML endpoints
+app.add_middleware(
+    RateLimitMiddleware,
+    rate_limit=10,  # Default: 10 requests per window
+    window_seconds=60  # 1 minute window
 )
 
 # Include routers
