@@ -1,0 +1,98 @@
+site_name: AURORA_LIFE Documentation
+site_description: Comprehensive documentation for AURORA_LIFE platform
+site_url: https://docs.auroralife.example.com
+repo_url: https://github.com/Marksio90/AURORA_LIFE
+repo_name: Marksio90/AURORA_LIFE
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Introduction: getting-started/introduction.md
+      - Quick Start: getting-started/quick-start.md
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+  - API Reference:
+      - Overview: api/overview.md
+      - Authentication: api/authentication.md
+      - Users: api/users.md
+      - Events: api/events.md
+      - Timeline: api/timeline.md
+      - Predictions: api/predictions.md
+      - Insights: api/insights.md
+      - Webhooks: api/webhooks.md
+  - SDK Documentation:
+      - Python SDK: sdk/python.md
+      - JavaScript SDK: sdk/javascript.md
+      - Code Examples: sdk/examples.md
+  - Deployment:
+      - Docker: deployment/docker.md
+      - Kubernetes: deployment/kubernetes.md
+      - Environment Variables: deployment/environment.md
+      - Security Best Practices: deployment/security.md
+  - Developer Guides:
+      - Architecture: guides/architecture.md
+      - ML Models: guides/ml-models.md
+      - Background Jobs: guides/background-jobs.md
+      - Real-time Updates: guides/websockets.md
+      - Testing: guides/testing.md
+      - Contributing: guides/contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Marksio90/AURORA_LIFE
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/auroralife/api
