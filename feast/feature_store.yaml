@@ -1,0 +1,38 @@
+# Feast Feature Store Configuration
+# Defines the feature repository settings for Aurora Life
+
+project: aurora_life
+provider: local
+registry: data/registry.db
+
+# Online store for real-time feature serving (Redis)
+online_store:
+  type: redis
+  connection_string: "redis:6379"
+  key_ttl_seconds: 86400  # 24 hours
+
+# Offline store for training data (PostgreSQL)
+offline_store:
+  type: postgres
+  host: postgres
+  port: 5432
+  database: aurora_life
+  user: aurora
+  password: aurora_dev_password
+  sslmode: disable
+
+# Entity key serialization version
+entity_key_serialization_version: 2
+
+# Enable feature server (for REST API serving)
+feature_server:
+  enabled: true
+  port: 6566
+  host: 0.0.0.0
+
+# Flags
+flags:
+  # Enable alpha features
+  alpha_features: true
+  # Enable on-demand features
+  on_demand_feature_views: true
