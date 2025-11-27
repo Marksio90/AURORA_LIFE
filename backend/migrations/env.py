@@ -15,6 +15,18 @@ from app.models.user import User
 from app.models.life_event import LifeEvent
 from app.models.timeline import TimelineEntry
 
+# Phase 8 models
+from app.models.gamification import (
+    UserLevel, Achievement, UserAchievement, Badge, UserBadge,
+    Streak, DailyChallenge, UserChallenge, Leaderboard
+)
+from app.models.social import (
+    Friendship, Group, GroupMembership, GroupPost, PostComment,
+    PostLike, AccountabilityPartnership, PartnershipCheckIn,
+    CommunityChallenge, ChallengeParticipant
+)
+from app.models.integrations import UserIntegration, SyncedData
+
 # Alembic Config object
 config = context.config
 
