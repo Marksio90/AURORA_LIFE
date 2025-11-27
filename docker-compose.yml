@@ -1,28 +1,36 @@
 version: '3.8'
 
 services:
+  # ==================== DATABASE ====================
   postgres:
     image: postgres:15-alpine
     container_name: aurora_postgres
     environment:
-      POSTGRES_DB: aurora_life
-      POSTGRES_USER: aurora
-      POSTGRES_PASSWORD: aurora_dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-aurora_life}
+      POSTGRES_USER: ${POSTGRES_USER:-aurora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aurora_dev_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aurora"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aurora}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - aurora_network
 
+  # ==================== CACHE & MESSAGE BROKER ====================
   redis:
     image: redis:7-alpine
     container_name: aurora_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -30,42 +38,69 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - aurora_network
 
+  # ==================== VECTOR DATABASE ====================
   qdrant:
     image: qdrant/qdrant:latest
     container_name: aurora_qdrant
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
     volumes:
       - qdrant_storage:/qdrant/storage
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
+      QDRANT__SERVICE__HTTP_PORT: 6333
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - aurora_network
 
+  # ==================== BACKEND API ====================
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV:-true}
     container_name: aurora_backend
+    env_file:
+      - .env
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: aurora_life
-      POSTGRES_USER: aurora
-      POSTGRES_PASSWORD: aurora_dev_password
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aurora}:${POSTGRES_PASSWORD:-aurora_dev_password}@postgres:5432/${POSTGRES_DB:-aurora_life}
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+
+      # Qdrant
       QDRANT_HOST: qdrant
-      QDRANT_PORT: 6333
+      QDRANT_HTTP_PORT: 6333
       QDRANT_GRPC_PORT: 6334
-      APP_ENV: development
+
+      # App
+      APP_ENV: ${APP_ENV:-development}
+      DEBUG: ${DEBUG:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      - backend_logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,9 +108,149 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - aurora_network
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        python -m app.core.wait_for_db &&
+        echo 'Running migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting server...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
 
+  # ==================== CELERY WORKER ====================
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_celery_worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aurora}:${POSTGRES_PASSWORD:-aurora_dev_password}@postgres:5432/${POSTGRES_DB:-aurora_life}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      QDRANT_HOST: qdrant
+      APP_ENV: ${APP_ENV:-development}
+    volumes:
+      - ./backend:/app
+      - celery_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aurora_network
+    command: celery -A app.core.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS:-4}
+
+  # ==================== CELERY BEAT (SCHEDULER) ====================
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_celery_beat
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aurora}:${POSTGRES_PASSWORD:-aurora_dev_password}@postgres:5432/${POSTGRES_DB:-aurora_life}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      QDRANT_HOST: qdrant
+      APP_ENV: ${APP_ENV:-development}
+    volumes:
+      - ./backend:/app
+      - celery_beat_data:/app/celerybeat-schedule
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aurora_network
+    command: celery -A app.core.celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
+
+  # ==================== FLOWER (CELERY MONITORING) ====================
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aurora_flower
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      FLOWER_PORT: 5555
+      FLOWER_BASIC_AUTH: ${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    depends_on:
+      - redis
+      - celery_worker
+    restart: unless-stopped
+    networks:
+      - aurora_network
+    command: celery -A app.core.celery_app flower --port=5555 --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+
+  # ==================== NGINX (REVERSE PROXY) ====================
+  nginx:
+    image: nginx:alpine
+    container_name: aurora_nginx
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+      - static_files:/var/www/static:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - aurora_network
+    profiles:
+      - production
+
+# ==================== NETWORKS ====================
+networks:
+  aurora_network:
+    driver: bridge
+    name: aurora_network
+
+# ==================== VOLUMES ====================
 volumes:
   postgres_data:
+    name: aurora_postgres_data
   redis_data:
+    name: aurora_redis_data
   qdrant_storage:
+    name: aurora_qdrant_storage
+  backend_logs:
+    name: aurora_backend_logs
+  celery_logs:
+    name: aurora_celery_logs
+  celery_beat_data:
+    name: aurora_celery_beat_data
+  nginx_logs:
+    name: aurora_nginx_logs
+  static_files:
+    name: aurora_static_files
