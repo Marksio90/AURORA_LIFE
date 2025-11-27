@@ -96,3 +96,22 @@ opentelemetry-exporter-otlp-proto-grpc==1.22.0
 stripe==11.2.0
 sendgrid==6.11.0
 pywebpush==1.14.0
+
+# Data Engineering - Event Streaming
+kafka-python==2.0.2
+aiokafka==0.10.0  # Async Kafka client
+confluent-kafka==2.3.0  # High-performance Kafka client
+
+# Data Engineering - Workflow Orchestration
+apache-airflow==2.8.1
+apache-airflow-providers-postgres==5.9.0
+apache-airflow-providers-celery==3.5.0
+apache-airflow-providers-redis==3.5.0
+
+# Data Engineering - Feature Store
+feast==0.36.0
+feast[redis]==0.36.0
+
+# Data Quality
+great-expectations==0.18.8
+pandera==0.17.2
