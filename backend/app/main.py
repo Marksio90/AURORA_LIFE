@@ -12,7 +12,7 @@ from app.core.events.stream import event_stream
 from app.middleware.rate_limit import RateLimitMiddleware
 
 # Import routers
-from app.api import users, events, timeline, vault, ai, auth, ml_advanced
+from app.api import users, events, timeline, vault, ai, auth, ml_advanced, gamification, social, integrations
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,9 @@ app.include_router(timeline.router)
 app.include_router(vault.router)
 app.include_router(ai.router)  # Zestaw 2: AI/ML
 app.include_router(ml_advanced.router)  # Phase 7: Advanced ML/AI
+app.include_router(gamification.router)  # Phase 8: Gamification
+app.include_router(social.router)  # Phase 8: Social Features
+app.include_router(integrations.router)  # Phase 8: Integrations
 
 
 @app.get("/")
@@ -86,6 +89,9 @@ async def root():
             "vault": "/api/vault",
             "ai": "/api/ai",  # Zestaw 2
             "ml_advanced": "/api/v1/ml-advanced",  # Phase 7
+            "gamification": "/api/v1/gamification",  # Phase 8
+            "social": "/api/v1/social",  # Phase 8
+            "integrations": "/api/v1/integrations",  # Phase 8
             "docs": "/docs"
         },
         "set_2_ai": {
@@ -100,6 +106,18 @@ async def root():
             "rag_chat": "/api/v1/ml-advanced/chat",
             "meta_agent_analysis": "/api/v1/ml-advanced/meta-analysis",
             "health_check": "/api/v1/ml-advanced/health"
+        },
+        "phase_8_platform_features": {
+            "gamification_stats": "/api/v1/gamification/stats",
+            "achievements": "/api/v1/gamification/achievements",
+            "leaderboards": "/api/v1/gamification/leaderboard",
+            "social_friends": "/api/v1/social/friends",
+            "social_groups": "/api/v1/social/groups",
+            "accountability_partners": "/api/v1/social/accountability",
+            "integrations_available": "/api/v1/integrations/available",
+            "integrations_connect": "/api/v1/integrations/connect",
+            "voice_transcribe": "/api/v1/integrations/voice/transcribe",
+            "voice_command": "/api/v1/integrations/voice/command"
         }
     }
 
