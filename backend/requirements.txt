@@ -22,6 +22,41 @@ scikit-learn==1.4.0
 xgboost==2.0.3
 lightgbm==4.3.0
 
+# ML/AI Advanced - Time Series & Forecasting
+prophet==1.1.5
+statsmodels==0.14.1
+
+# ML/AI Advanced - Deep Learning
+torch==2.1.2
+tensorflow==2.15.0
+
+# ML/AI Advanced - Explainable AI
+shap==0.44.1
+
+# ML/AI Advanced - Hyperparameter Tuning
+optuna==3.5.0
+
+# ML/AI Advanced - MLOps
+mlflow==2.9.2
+
+# AI Agents - LangChain Ecosystem
+langchain==0.1.0
+langchain-openai==0.0.2
+langchain-anthropic==0.0.2
+langchain-community==0.0.10
+
+# AI Agents - Vector Databases
+chromadb==0.4.22
+qdrant-client==1.7.3
+
+# AI Agents - Embeddings & NLP
+sentence-transformers==2.3.1
+openai-whisper==20231117
+transformers==4.36.2
+
+# AI Agents - Memory & Context
+faiss-cpu==1.7.4
+
 # Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4

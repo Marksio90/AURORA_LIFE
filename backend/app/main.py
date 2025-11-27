@@ -12,7 +12,7 @@ from app.core.events.stream import event_stream
 from app.middleware.rate_limit import RateLimitMiddleware
 
 # Import routers
-from app.api import users, events, timeline, vault, ai, auth
+from app.api import users, events, timeline, vault, ai, auth, ml_advanced
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ app.include_router(events.router)
 app.include_router(timeline.router)
 app.include_router(vault.router)
 app.include_router(ai.router)  # Zestaw 2: AI/ML
+app.include_router(ml_advanced.router)  # Phase 7: Advanced ML/AI
 
 
 @app.get("/")
@@ -84,12 +85,21 @@ async def root():
             "timeline": "/api/timeline",
             "vault": "/api/vault",
             "ai": "/api/ai",  # Zestaw 2
+            "ml_advanced": "/api/v1/ml-advanced",  # Phase 7
             "docs": "/docs"
         },
         "set_2_ai": {
             "datagenius": "/api/ai/analyze, /api/ai/predict, /api/ai/recommend",
             "aurora_agents": "/api/ai/agents/run-all",
             "whatif_engine": "/api/ai/whatif/simulate"
+        },
+        "phase_7_advanced_ml": {
+            "time_series_forecasting": "/api/v1/ml-advanced/forecast",
+            "anomaly_detection": "/api/v1/ml-advanced/detect-anomalies",
+            "explainable_ai": "/api/v1/ml-advanced/explain-prediction",
+            "rag_chat": "/api/v1/ml-advanced/chat",
+            "meta_agent_analysis": "/api/v1/ml-advanced/meta-analysis",
+            "health_check": "/api/v1/ml-advanced/health"
         }
     }
 
