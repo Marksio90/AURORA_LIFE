@@ -84,14 +84,14 @@ sentry-sdk[fastapi]==1.39.2
 openai==1.58.1
 anthropic==0.40.0
 
-# Tracing
-opentelemetry-api==1.22.0
-opentelemetry-sdk==1.22.0
-opentelemetry-instrumentation-fastapi==0.43b0
-opentelemetry-instrumentation-sqlalchemy==0.43b0
-opentelemetry-instrumentation-redis==0.43b0
-opentelemetry-instrumentation-httpx==0.43b0
-opentelemetry-exporter-otlp-proto-grpc==1.22.0
+# Tracing - Updated for Apache Airflow 2.10.4 compatibility (requires opentelemetry-api>=1.24.0)
+opentelemetry-api==1.28.2
+opentelemetry-sdk==1.28.2
+opentelemetry-instrumentation-fastapi==0.49b2
+opentelemetry-instrumentation-sqlalchemy==0.49b2
+opentelemetry-instrumentation-redis==0.49b2
+opentelemetry-instrumentation-httpx==0.49b2
+opentelemetry-exporter-otlp-proto-grpc==1.28.2
 
 # Payments & Notifications (Updated January 2025)
 stripe==11.2.0
