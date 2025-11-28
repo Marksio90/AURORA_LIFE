@@ -228,6 +228,7 @@ nano .env
 
 ### 3. Quick Start (Docker)
 
+**Linux/macOS:**
 ```bash
 # Quick start - launches full stack
 make quickstart
@@ -237,6 +238,21 @@ make build      # Build containers
 make up         # Start services
 make migrate    # Run migrations
 make seed       # Seed initial data
+```
+
+**Windows (PowerShell):**
+```powershell
+# Quick start - launches full stack
+.\aurora.ps1 quickstart
+
+# Or manually:
+.\aurora.ps1 build      # Build containers
+.\aurora.ps1 up         # Start services
+.\aurora.ps1 migrate    # Run migrations
+.\aurora.ps1 seed       # Seed initial data
+
+# View all available commands:
+.\aurora.ps1 help
 ```
 
 ### 4. Access Services
@@ -311,6 +327,7 @@ See full API documentation at `/docs` when server is running.
 
 ## 🧪 Testing
 
+**Linux/macOS:**
 ```bash
 # Run all tests
 make test
@@ -323,6 +340,19 @@ make test-coverage
 
 # Run linting
 make lint
+```
+
+**Windows (PowerShell):**
+```powershell
+# Run all tests
+.\aurora.ps1 test
+
+# Run specific test file (use docker-compose directly)
+docker-compose exec backend pytest tests/test_analytics.py
+
+# Other commands
+.\aurora.ps1 install    # Install dependencies
+.\aurora.ps1 status     # Check service status
 ```
 
 ---
@@ -358,6 +388,7 @@ make migrate-down
 
 ### Docker Commands
 
+**Linux/macOS:**
 ```bash
 make build          # Build containers
 make up             # Start services
@@ -366,6 +397,17 @@ make logs           # View logs
 make shell          # Backend shell
 make db-shell       # Database shell
 make redis-shell    # Redis shell
+```
+
+**Windows (PowerShell):**
+```powershell
+.\aurora.ps1 build      # Build containers
+.\aurora.ps1 up         # Start services
+.\aurora.ps1 down       # Stop services
+.\aurora.ps1 logs       # View logs
+.\aurora.ps1 shell      # Backend shell
+.\aurora.ps1 status     # Service status
+.\aurora.ps1 clean      # Cleanup containers and volumes
 ```
 
 ### Data Engineering
