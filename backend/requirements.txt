@@ -84,14 +84,14 @@ sentry-sdk[fastapi]==1.39.2
 openai==1.58.1
 anthropic==0.40.0
 
-# Tracing - Updated for Apache Airflow 2.10.4 compatibility (requires opentelemetry-api>=1.24.0)
-opentelemetry-api==1.28.2
-opentelemetry-sdk==1.28.2
-opentelemetry-instrumentation-fastapi==0.49b2
-opentelemetry-instrumentation-sqlalchemy==0.49b2
-opentelemetry-instrumentation-redis==0.49b2
-opentelemetry-instrumentation-httpx==0.49b2
-opentelemetry-exporter-otlp-proto-grpc==1.28.2
+# Tracing
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-instrumentation-sqlalchemy==0.43b0
+opentelemetry-instrumentation-redis==0.43b0
+opentelemetry-instrumentation-httpx==0.43b0
+opentelemetry-exporter-otlp-proto-grpc==1.22.0
 
 # Payments & Notifications (Updated January 2025)
 stripe==11.2.0
@@ -103,15 +103,11 @@ kafka-python==2.0.2
 aiokafka==0.10.0  # Async Kafka client
 confluent-kafka==2.3.0  # High-performance Kafka client
 
-# Data Engineering - Workflow Orchestration
-# Apache Airflow 2.10+ supports SQLAlchemy 2.0
-apache-airflow==2.10.4
-apache-airflow-providers-postgres==5.13.0
-apache-airflow-providers-celery==3.8.3
-apache-airflow-providers-redis==4.3.3
-
 # Data Engineering - Feature Store
-feast[redis]==0.36.0
+# Note: Apache Airflow and Feast have been moved to separate requirements files
+# to avoid dependency conflicts with SQLAlchemy 2.0
+# See airflow/requirements.txt for Apache Airflow
+# See feast-requirements.txt for Feast (if needed)
 
 # Data Quality
 great-expectations==0.18.8
