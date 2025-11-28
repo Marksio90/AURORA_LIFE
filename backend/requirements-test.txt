@@ -1,0 +1,43 @@
+# Testing Dependencies for AURORA_LIFE
+
+# Base requirements
+-r requirements.txt
+
+# Testing Framework
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0  # Parallel test execution
+pytest-timeout==2.2.0  # Test timeouts
+
+# HTTP Testing
+httpx==0.26.0  # Already in main requirements
+
+# Database Testing
+pytest-alembic==0.10.7  # Test migrations
+sqlalchemy-utils==0.41.1  # Database test utilities
+
+# Mocking & Fixtures
+faker==22.6.0  # Generate fake test data
+factory-boy==3.3.0  # Factory pattern for test data
+freezegun==1.4.0  # Mock datetime
+
+# Code Quality
+coverage[toml]==7.4.1
+pytest-html==4.1.1  # HTML test reports
+
+# Load Testing (already in tests/)
+locust==2.20.0
+
+# Linting & Formatting (dev)
+black==24.1.1
+isort==5.13.2
+flake8==7.0.0
+mypy==1.8.0
+pylint==3.0.3
+
+# Type Stubs
+types-redis==4.6.0.20240106
+types-requests==2.31.0.20240106
+sqlalchemy[mypy]==2.0.25
