@@ -457,10 +457,10 @@ make db-restore backup=backup_2025-01-27.sql
 - **Phase 9:** Data engineering (Kafka, Airflow, Feast)
 - **Phase 10:** Advanced analytics & insights
 - **Phase 11:** Notifications & real-time updates
+- **Phase 12:** Testing & quality assurance
 
 ### 🚧 In Progress
 
-- **Phase 12:** Testing & quality assurance
 - **Phase 13:** Admin panel & monitoring
 
 ### 📋 Planned
